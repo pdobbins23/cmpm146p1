@@ -22,8 +22,14 @@ def find_path(source_point, destination_point, mesh):
                     break
 
     path.append(source_point)
+    boxes[source_box] = ();
+
+    # use mesh["adj"][box_info] to find adj boxes, box_info acts as the key and is the coords
+    # breadth first search example given in wednesday lecture, should likely use as example when coding
+    # currently at step 2 of suggested workflow, "Implement the simplest complete search algorithm you can"
+    
     path.append(destination_point)
-    # boxes{};
+    boxes[destination_box] = ();
     
     return path, boxes.keys()
     

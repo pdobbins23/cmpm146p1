@@ -18,5 +18,9 @@ def find_path(source_point, destination_point, mesh):
             if(source_box != ()):
                 print("both found!")
                 break
+
+    path.append(source_point)
+    path.append(destination_point)
+    # boxes{};
     
     return path, boxes.keys()

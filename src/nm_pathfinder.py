@@ -12,8 +12,8 @@ def find_path(source_point, destination_point, mesh):
             if(destination_box != ()):
                 print("both found!")
                 break
-        if source_point[0] >= rect[0] and source_point[0] <= rect[1] and source_point[1] >= rect[2] and source_point[1] <= rect[3]:
-            print(source_point, rect)
+        if destination_point[0] >= rect[0] and destination_point[0] <= rect[1] and destination_point[1] >= rect[2] and destination_point[1] <= rect[3]:
+            print(destination_point, rect)
             destination_box = rect
             if(source_box != ()):
                 print("both found!")

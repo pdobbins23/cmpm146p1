@@ -48,7 +48,8 @@ def find_path(source_point, destination_point, mesh):
             lastBox = box
         path.append(destination_point)
 
-    
+    # On step 4, implementing A*
+    # for converting djikstra to A*, should probably add heuristic to transition_cost
     
     return path, boxes.keys()
 

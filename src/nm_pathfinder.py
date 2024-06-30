@@ -30,7 +30,7 @@ def find_path(source_point, destination_point, mesh):
 
     boxPath = BFS(source_box, destination_box, mesh["adj"])
 
-    print(boxPath)
+    # print(boxPath)
 
     if boxPath == None:
         print("No path!")
@@ -38,6 +38,8 @@ def find_path(source_point, destination_point, mesh):
         for box in boxPath:
             path.append(midpoint(box))
             boxes[box] = ()
+
+    # On step 3, fixing midpoints
     
     return path, boxes.keys()
 

@@ -1,4 +1,6 @@
-from queue import Queue
+from queue import Queue, PriorityQueue
+from math import inf, sqrt
+import Dijkstra_forward_search as dijkstra
 
 def find_path(source_point, destination_point, mesh):
     path = []
@@ -28,7 +30,8 @@ def find_path(source_point, destination_point, mesh):
         print("No path!")
         return path, boxes.keys()
 
-    boxPath = BFS(source_box, destination_box, mesh["adj"])
+    # boxPath = BFS(source_box, destination_box, mesh["adj"])
+    boxPath = AStar(source_box, source_point, destination_box, destination_point, mesh["adj"])
 
     # print(boxPath)
 
@@ -48,8 +51,8 @@ def find_path(source_point, destination_point, mesh):
             lastBox = box
         path.append(destination_point)
 
-    # On step 4, implementing A*
-    # for converting djikstra to A*, should probably add heuristic to transition_cost
+    # Nearly done with step 4, implementing A*
+    # AStar is seemingly slow and inaccurate, test some more and see if it's bugged
     
     return path, boxes.keys()
 
@@ -86,6 +89,100 @@ def BFS(source_box, destination_box, adjDict):
         path.insert(0, cur)
 
     return path
+
+# modified BFS, based off Amit Patel (https://www.redblobgames.com/pathfinding/a-star/introduction.html)
+def dijkstra(source_box, source_position, destination_box, destination_position, adjDict):
+    toVisit = PriorityQueue()
+    toVisit.put(source_box,0)
+    toVisitStartPos = Queue()
+    toVisitStartPos.put(source_position)
+    cameFrom = dict()
+    cost_so_far = dict()
+    cameFrom[source_box] = None
+    cost_so_far[source_box] = 0
+
+    while not toVisit.empty():
+        current = toVisit.get()
+        currentPoint = toVisitStartPos.get()
+        if(current == destination_box):
+            break
+        if(current not in adjDict):
+            break
+        for next in adjDict[current]:
+            nextPoint = calcPointLocation(current, currentPoint, next)
+            new_cost = cost_so_far[current] + distance_cost(currentPoint, nextPoint)
+            if next not in cost_so_far or new_cost < cost_so_far[next]:
+                cost_so_far[next] = new_cost
+                priority = new_cost
+                toVisit.put(next, priority)
+                toVisitStartPos.put(nextPoint)
+                cameFrom[next] = current
+
+    # If not valid path, return none
+    if not destination_box in cameFrom:
+        print("return None for boxPath")
+        return None
+
+    path = [destination_box]
+    cur = destination_box
+
+    while cameFrom[cur] != None:
+        cur = cameFrom[cur]
+        path.insert(0, cur)
+
+    return path
+
+# modified Djikstra, based off Amit Patel (https://www.redblobgames.com/pathfinding/a-star/introduction.html)
+def AStar(source_box, source_position, destination_box, destination_position, adjDict):
+    toVisit = PriorityQueue()
+    toVisit.put(source_box,0)
+    toVisitStartPos = Queue()
+    toVisitStartPos.put(source_position)
+    cameFrom = dict()
+    cost_so_far = dict()
+    cameFrom[source_box] = None
+    cost_so_far[source_box] = 0
+
+    while not toVisit.empty():
+        current = toVisit.get()
+        currentPoint = toVisitStartPos.get()
+        if(current == destination_box):
+            break
+        if(current not in adjDict):
+            break
+        for next in adjDict[current]:
+            nextPoint = calcPointLocation(current, currentPoint, next)
+            new_cost = cost_so_far[current] + distance_cost(currentPoint, nextPoint)
+            if next not in cost_so_far or new_cost < cost_so_far[next]:
+                cost_so_far[next] = new_cost
+                priority = new_cost + heuristic(destination_position,nextPoint)
+                toVisit.put(next, priority)
+                toVisitStartPos.put(nextPoint)
+                cameFrom[next] = current
+
+    # If not valid path, return none
+    if not destination_box in cameFrom:
+        print("return None for boxPath")
+        return None
+
+    path = [destination_box]
+    cur = destination_box
+
+    while cameFrom[cur] != None:
+        cur = cameFrom[cur]
+        path.insert(0, cur)
+
+    return path
+
+# based off transition_cost from Dijkstra_forward_search.py
+def heuristic(goal,next):
+    distance = sqrt((goal[0] - next[0])**2 + (goal[1] - next[1])**2)
+    return distance
+
+# Taken+modified from Dijkstra_forward_search.py
+def distance_cost(cell, cell2):
+    distance = sqrt((cell2[0] - cell[0])**2 + (cell2[1] - cell[1])**2)
+    return distance
 
 # helper, returns midpoint of box
 def midpoint(box): #y1,y2,x1,x2

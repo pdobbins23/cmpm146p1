@@ -31,7 +31,7 @@ def find_path(source_point, destination_point, mesh):
         return path, boxes.keys()
 
     # boxPath = BFS(source_box, destination_box, mesh["adj"])
-    boxPath = AStar(source_box, source_point, destination_box, destination_point, mesh["adj"])
+    boxPath = dijkstra(source_box, source_point, destination_box, destination_point, mesh["adj"])
 
     # print(boxPath)
 
@@ -93,17 +93,15 @@ def BFS(source_box, destination_box, adjDict):
 # modified BFS, based off Amit Patel (https://www.redblobgames.com/pathfinding/a-star/introduction.html)
 def dijkstra(source_box, source_position, destination_box, destination_position, adjDict):
     toVisit = PriorityQueue()
-    toVisit.put(source_box,0)
-    toVisitStartPos = Queue()
-    toVisitStartPos.put(source_position)
+    toVisit.put((source_box,source_position),0)
     cameFrom = dict()
     cost_so_far = dict()
     cameFrom[source_box] = None
     cost_so_far[source_box] = 0
 
     while not toVisit.empty():
-        current = toVisit.get()
-        currentPoint = toVisitStartPos.get()
+        print("Length", len(toVisit.queue))
+        current, currentPoint = toVisit.get()
         if(current == destination_box):
             break
         if(current not in adjDict):
@@ -114,8 +112,7 @@ def dijkstra(source_box, source_position, destination_box, destination_position,
             if next not in cost_so_far or new_cost < cost_so_far[next]:
                 cost_so_far[next] = new_cost
                 priority = new_cost
-                toVisit.put(next, priority)
-                toVisitStartPos.put(nextPoint)
+                toVisit.put((next, nextPoint), priority)
                 cameFrom[next] = current
 
     # If not valid path, return none

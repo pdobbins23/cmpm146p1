@@ -31,7 +31,8 @@ def find_path(source_point, destination_point, mesh):
         return path, boxes.keys()
 
     # boxPath = BFS(source_box, destination_box, mesh["adj"])
-    boxPath = dijkstra(source_box, source_point, destination_box, destination_point, mesh["adj"])
+    # boxPath = dijkstra(source_box, source_point, destination_box, destination_point, mesh["adj"])
+    boxPath = AStar(source_box, source_point, destination_box, destination_point, mesh["adj"])
 
     # print(boxPath)
 
@@ -93,15 +94,14 @@ def BFS(source_box, destination_box, adjDict):
 # modified BFS, based off Amit Patel (https://www.redblobgames.com/pathfinding/a-star/introduction.html)
 def dijkstra(source_box, source_position, destination_box, destination_position, adjDict):
     toVisit = PriorityQueue()
-    toVisit.put((source_box,source_position),0)
+    toVisit.put((0, source_box,source_position))
     cameFrom = dict()
     cost_so_far = dict()
     cameFrom[source_box] = None
     cost_so_far[source_box] = 0
 
     while not toVisit.empty():
-        print("Length", len(toVisit.queue))
-        current, currentPoint = toVisit.get()
+        priority, current, currentPoint = toVisit.get()
         if(current == destination_box):
             break
         if(current not in adjDict):
@@ -112,7 +112,7 @@ def dijkstra(source_box, source_position, destination_box, destination_position,
             if next not in cost_so_far or new_cost < cost_so_far[next]:
                 cost_so_far[next] = new_cost
                 priority = new_cost
-                toVisit.put((next, nextPoint), priority)
+                toVisit.put((priority,next, nextPoint))
                 cameFrom[next] = current
 
     # If not valid path, return none
@@ -132,17 +132,14 @@ def dijkstra(source_box, source_position, destination_box, destination_position,
 # modified Djikstra, based off Amit Patel (https://www.redblobgames.com/pathfinding/a-star/introduction.html)
 def AStar(source_box, source_position, destination_box, destination_position, adjDict):
     toVisit = PriorityQueue()
-    toVisit.put(source_box,0)
-    toVisitStartPos = Queue()
-    toVisitStartPos.put(source_position)
+    toVisit.put((0, source_box, source_position))
     cameFrom = dict()
     cost_so_far = dict()
     cameFrom[source_box] = None
     cost_so_far[source_box] = 0
 
     while not toVisit.empty():
-        current = toVisit.get()
-        currentPoint = toVisitStartPos.get()
+        priority, current, currentPoint = toVisit.get()
         if(current == destination_box):
             break
         if(current not in adjDict):
@@ -153,8 +150,7 @@ def AStar(source_box, source_position, destination_box, destination_position, ad
             if next not in cost_so_far or new_cost < cost_so_far[next]:
                 cost_so_far[next] = new_cost
                 priority = new_cost + heuristic(destination_position,nextPoint)
-                toVisit.put(next, priority)
-                toVisitStartPos.put(nextPoint)
+                toVisit.put((priority, next, nextPoint))
                 cameFrom[next] = current
 
     # If not valid path, return none
@@ -191,23 +187,23 @@ def calcPointLocation(start_box, start_point, end_box):
     y,x = 0,0
     #if end_box to north
     if(start_box[0] == end_box[1]): # s.y1 == e.y2
-        print("north")
+        # print("north")
         y = end_box[1]
         x = min(max(end_box[2], start_point[1]), end_box[3])
     #else if to east
     elif(start_box[3] == end_box[2]): # s.x2 == e.x1
-        print("east")
+        # print("east")
         x = end_box[2]
         y = min(max(end_box[0], start_point[0]), end_box[1])
     #else if to south
     elif(start_box[1] == end_box[0]): # s.y2 == e.y3
-        print("south")
+        # print("south")
         y = end_box[0]
         x = min(max(end_box[2], start_point[1]), end_box[3])
     #else (west)
     elif(start_box[2] == end_box[3]): # s.x1 == e.x2
-        print("west")
+        # print("west")
         x = end_box[3]
         y = min(max(end_box[0], start_point[0]), end_box[1])
-    print(str(start_point) + " to " + str(y) + "," + str(x))
+    # print(str(start_point) + " to " + str(y) + "," + str(x))
     return (y,x)

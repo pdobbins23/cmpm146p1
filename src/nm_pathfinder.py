@@ -12,17 +12,17 @@ def find_path(source_point, destination_point, mesh):
     for rect in mesh["boxes"]:
         if source_point[1] >= rect[2] and source_point[1] <= rect[3] and source_point[0] >= rect[0] and source_point[0] <= rect[1]:
             if(source_box == ()):
-                print(source_point, rect)
+                #print(source_point, rect)
                 source_box = rect
                 if(destination_box != ()):
-                    print("both found!")
+                    #print("both found!")
                     break
         if destination_point[1] >= rect[2] and destination_point[1] <= rect[3] and destination_point[0] >= rect[0] and destination_point[0] <= rect[1]:
             if(destination_box == ()):
-                print(destination_point, rect)
+                #print(destination_point, rect)
                 destination_box = rect
                 if(source_box != ()):
-                    print("both found!")
+                    #print("both found!")
                     break
 
     #If there's no start/end point/box
@@ -32,7 +32,7 @@ def find_path(source_point, destination_point, mesh):
 
     # boxPath = BFS(source_box, destination_box, mesh["adj"])
     # boxPath = dijkstra(source_box, source_point, destination_box, destination_point, mesh["adj"])
-    boxPath = AStar(source_box, source_point, destination_box, destination_point, mesh["adj"])
+    boxPath = BiDirAStar(source_box, source_point, destination_box, destination_point, mesh["adj"])
 
     # print(boxPath)
 
@@ -79,7 +79,7 @@ def BFS(source_box, destination_box, adjDict):
 
     # If not valid path, return none
     if not destination_box in cameFrom:
-        print("return None for boxPath")
+        #print("return None for boxPath")
         return None
 
     path = [destination_box]
@@ -92,6 +92,7 @@ def BFS(source_box, destination_box, adjDict):
     return path
 
 # modified BFS, based off Amit Patel (https://www.redblobgames.com/pathfinding/a-star/introduction.html)
+# performs a Djikstra's Forward Search
 def dijkstra(source_box, source_position, destination_box, destination_position, adjDict):
     toVisit = PriorityQueue()
     toVisit.put((0, source_box,source_position))
@@ -117,7 +118,7 @@ def dijkstra(source_box, source_position, destination_box, destination_position,
 
     # If not valid path, return none
     if not destination_box in cameFrom:
-        print("return None for boxPath")
+        #print("return None for boxPath")
         return None
 
     path = [destination_box]
@@ -130,6 +131,7 @@ def dijkstra(source_box, source_position, destination_box, destination_position,
     return path
 
 # modified Djikstra, based off Amit Patel (https://www.redblobgames.com/pathfinding/a-star/introduction.html)
+# performs an A* search
 def AStar(source_box, source_position, destination_box, destination_position, adjDict):
     toVisit = PriorityQueue()
     toVisit.put((0, source_box, source_position))
@@ -155,7 +157,7 @@ def AStar(source_box, source_position, destination_box, destination_position, ad
 
     # If not valid path, return none
     if not destination_box in cameFrom:
-        print("return None for boxPath")
+        #print("return None for boxPath")
         return None
 
     path = [destination_box]
@@ -165,6 +167,66 @@ def AStar(source_box, source_position, destination_box, destination_position, ad
         cur = cameFrom[cur]
         path.insert(0, cur)
 
+    return path
+
+# modified A*[Said A* based off of Amit Patel (https://www.redblobgames.com/pathfinding/a-star/introduction.html)]
+# performs a bidirectional A* search
+def BiDirAStar(source_box, source_position, destination_box, destination_position, adjDict):
+    toVisit = PriorityQueue()
+    # True = forward, False = backward
+    toVisit.put((0, source_box, source_position, True))
+    toVisit.put((0, destination_box, destination_position, False))
+    cameFromForward = dict()
+    cameFromForward[source_box] = (None,0)
+    cameFromBackward = dict()
+    cameFromBackward[destination_box] = (None,0)
+    connectionBox = ()
+    
+    while not toVisit.empty():
+        priority, current, currentPoint, direction = toVisit.get()
+        if(current not in adjDict):
+            break
+        if direction: #forward
+            if(current in cameFromBackward):
+                connectionBox = current
+                break
+            for next in adjDict[current]:
+                nextPoint = calcPointLocation(current, currentPoint, next)
+                new_cost = cameFromForward[current][1] + distance_cost(currentPoint, nextPoint)
+                if next not in cameFromForward or new_cost < cameFromForward[next][1]:
+                    cameFromForward[next] = (current,new_cost)
+                    priority = new_cost + heuristic(destination_position,nextPoint)
+                    toVisit.put((priority, next, nextPoint, direction))
+        else: #backward
+            if(current in cameFromForward):
+                connectionBox = current
+                break
+            for next in adjDict[current]:
+                nextPoint = calcPointLocation(current, currentPoint, next)
+                new_cost = cameFromBackward[current][1] + distance_cost(currentPoint, nextPoint)
+                if next not in cameFromBackward or new_cost < cameFromBackward[next][1]:
+                    cameFromBackward[next] = (current,new_cost)
+                    priority = new_cost + heuristic(destination_position,nextPoint)
+                    toVisit.put((priority, next, nextPoint, direction))
+        
+    # If not valid path, return none
+    if connectionBox == ():
+        #print("return None for boxPath")
+        return None
+
+    path = [connectionBox]
+    cur = connectionBox
+
+    #print(connectionBox in cameFromForward, connectionBox in cameFromBackward)
+
+    while cameFromForward[cur][0] != None:
+        cur = cameFromForward[cur][0]
+        path.insert(0, cur)
+    cur = connectionBox
+    while cameFromBackward[cur][0] != None:
+        cur = cameFromBackward[cur][0]
+        path.append(cur)
+        
     return path
 
 # based off transition_cost from Dijkstra_forward_search.py
@@ -177,7 +239,7 @@ def distance_cost(cell, cell2):
     distance = sqrt((cell2[0] - cell[0])**2 + (cell2[1] - cell[1])**2)
     return distance
 
-# helper, returns midpoint of box
+# helper, returns midpoint of box, no longer used
 def midpoint(box): #y1,y2,x1,x2
     print(box)
     return ((box[2] + box[3]) / 2, (box[0] + box[1]) / 2)
